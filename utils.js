@@ -47,10 +47,10 @@ function include(filename)
  * the implementation. */
 function load_binary_remote(url, cb)
 {
-    console.log("utils.js---load_binary_remote");
+    console.log("utils.js---load_binary_remote:"+url);
     var req, typed_array, is_ie;
 
-    //    console.log("load_binary: url=" + url);
+    //console.log("load_binary: url=" + url);
 
     req = new XMLHttpRequest();
     req.open('GET', url, true);
@@ -60,7 +60,7 @@ function load_binary_remote(url, cb)
         var err, data, len, i, buf;
 
         if (req.readyState == 4) {
-            //            console.log("req status=" + req.status);
+            //console.log("req status=" + req.status);
             if (req.status != 200 && req.status != 0) {
                 cb(null, -1);
             } else {
@@ -80,7 +80,7 @@ function load_binary_remote(url, cb)
                     } else if ('responseType' in req) {
                         /* Note: in Android 3.0 there is no typed arrays so its
                            returns UTF8 text */
-                        console.log("load_binary_remote:response");
+                        //console.log("load_binary_remote:response");
                         data = req.response;
                     } else {
                         console.log("load_binary_remote:responseText");

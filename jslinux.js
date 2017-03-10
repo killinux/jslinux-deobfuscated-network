@@ -154,25 +154,22 @@ function start(kernel_name)
     {
     	//console.log("--->serial2_write");
         /*
-	document.getElementById("test_serial2").innerHTML = character;
-	var ar = character.split("\r");
-	if(ar.length > 1 && buffer.length > 0)
-	{
-		console.log(buffer);
-		buffer = "";
-	}
-	for(var i = 0; i < ar.length-1; i++)
-	{
-		var line = ar[i];
-		console.log(line);
-	}
-	buffer += ar[ar.length-1];
-	return true;
-	*/
+    	document.getElementById("test_serial2").innerHTML = character;
+    	var ar = character.split("\r");
+    	if(ar.length > 1 && buffer.length > 0){
+    		console.log(buffer);
+    		buffer = "";
+    	}
+    	for(var i = 0; i < ar.length-1; i++){
+    		var line = ar[i];
+    		console.log(line);
+    	}
+    	buffer += ar[ar.length-1];
+    	return true;
+	    */
         buffer += data;
         clearTimeout(transmitter);
-        if(buffer.length > tuntap_bufferSize)
-        {
+        if(buffer.length > tuntap_bufferSize){
             console.log("SENDING DATA OUT sz: " + buffer);
             tuntap_sendData(buffer);
             buffer = "";
@@ -198,7 +195,7 @@ function start(kernel_name)
      * 'block_size' KB. 
      */
     //params.hda = { url: "hda%d.bin", block_size: 64, nb_blocks: 912 };
-//params.hda = { url: "../jslinux-network/hda%d.bin", block_size: 64, nb_blocks: 912 };
+    //params.hda = { url: "../jslinux-network/hda%d.bin", block_size: 64, nb_blocks: 912 };
     params.hda = { url: "hao/hda%d.bin", block_size: 64, nb_blocks: 912 };
     //params.hdb = { url: "hdb%d.bin", block_size: 64, nb_blocks: 912 };
     
@@ -228,7 +225,8 @@ function start3(ret)
         return;
     /* Preload blocks so that the boot time does not depend on the
      * time to load the required disk data (optional) */
-    block_list = [ 0, 7, 3, 643, 720, 256, 336, 644, 781, 387, 464, 475, 131, 589, 468, 472, 474, 776, 777, 778, 779, 465, 466, 473, 467, 469, 470, 512, 592, 471, 691, 697, 708, 792, 775, 769 ];
+    block_list = [ 0, 7, 3];
+    //block_list = [ 0, 7, 3, 643, 720, 256, 336, 644, 781, 387, 464, 475, 131, 589, 468, 472, 474, 776, 777, 778, 779, 465, 466, 473, 467, 469, 470, 512, 592, 471, 691, 697, 708, 792, 775, 769 ];
     pc.ide0.drives[0].bs.preload(block_list, start4);//hao
 }
 

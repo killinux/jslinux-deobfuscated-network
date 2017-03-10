@@ -9742,7 +9742,7 @@ PU_X86.prototype.load_binary = function(Dg, fa, Eg) {
 };
 */
 CPU_X86.prototype.load_binary = function(kernel_name, start_addr, next_func) {
-	console.log(kernel_name+":"+start_addr+":"+next_func);
+	 //console.log(kernel_name+":"+start_addr+":"+next_func);
     var load_data, that;
     that = this;
     //cb(data, len)

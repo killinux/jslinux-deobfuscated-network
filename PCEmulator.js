@@ -621,15 +621,15 @@ Kh.prototype.read_async = function(yh, Yh, n, Zh) {
         return 1;
     }
 };
-Kh.prototype.preload = function(th, Eg) {
+Kh.prototype.preload = function(b_list, next_func) {
     var i, Dg, Nh;
-    if (th.length == 0) {
-        setTimeout(Eg, 0);
+    if (b_list.length == 0) {
+        setTimeout(next_func, 0);
     } else {
-        this.preload_cb2 = Eg;
-        this.preload_count = th.length;
-        for (i = 0; i < th.length; i++) {
-            Nh = th[i];
+        this.preload_cb2 = next_func;
+        this.preload_count = b_list.length;
+        for (i = 0; i < b_list.length; i++) {
+            Nh = b_list[i];
             Dg = this.get_url(this.url, Nh);
             //load_binary(Dg, this.preload_cb.bind(this, Nh));
             load_binary_remote(Dg, this.preload_cb.bind(this, Nh));
