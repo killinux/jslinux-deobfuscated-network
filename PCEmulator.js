@@ -11,7 +11,7 @@ Main PC Emulator Routine
 function set_hard_irq_wrapper(irq) { this.hard_irq = irq;}
 function return_cycle_count() { return this.cycle_count; }
 //add by hao have no idea begin 
-function Ig(n) {
+function unix_array(n) {
     return new Uint8Array(n);
 }
 //add by hao have no idea end
@@ -466,7 +466,7 @@ function qh(Dh, Eh) {
     this.select = 0xa0;
     this.status = 0x40 | 0x10;
     this.cmd = 0;
-    this.io_buffer = Ig(128 * 512 + 4);//hao
+    this.io_buffer = unix_array(128 * 512 + 4);//hao
     this.data_index = 0;
     this.data_end = 0;
     this.end_transfer_func = this.transfer_stop.bind(this);//hao
@@ -500,13 +500,14 @@ function ide_driver(Kg, fa, Hh, hh, Ih) {//ide0
 }
 //add by hao ide0 end
 //add by hao read disk begin
-function Kh(Dg, Lh, Mh) {
-    if (Dg.indexOf("%d") < 0) throw "Invalid URL";
-    if (Mh <= 0 || Lh <= 0) throw "Invalid parameters";
-    this.block_sectors = Lh * 2;
-    this.nb_sectors = this.block_sectors * Mh;
-    this.url = Dg;
-    this.max_cache_size = Math.max(1, Math.ceil(2536 / Lh));
+//block_size nb_blocks
+function create_block_list(block_url, block_size, nb_blocks) {
+    if (block_url.indexOf("%d") < 0) throw "Invalid URL";
+    if (nb_blocks <= 0 || block_size <= 0) throw "Invalid parameters";
+    this.block_sectors = block_size * 2;
+    this.nb_sectors = this.block_sectors * nb_blocks;
+    this.url = block_url;
+    this.max_cache_size = Math.max(1, Math.ceil(2536 / block_size));
     this.cache = new Array();
     this.sector_num = 0;
     this.sector_index = 0;
@@ -514,13 +515,13 @@ function Kh(Dg, Lh, Mh) {
     this.sector_buf = null;
     this.sector_cb = null;
 }
-Kh.prototype.get_sector_count = function() {
+create_block_list.prototype.get_sector_count = function() {
     return this.nb_sectors;
 };
-Kh.prototype.get_time = function() {
+create_block_list.prototype.get_time = function() {
     return + new Date();
 };
-Kh.prototype.get_cached_block = function(Nh) {
+create_block_list.prototype.get_cached_block = function(Nh) {
     var Oh, i, Ph = this.cache;
     for (i = 0; i < Ph.length; i++) {
         Oh = Ph[i];
@@ -528,7 +529,7 @@ Kh.prototype.get_cached_block = function(Nh) {
     }
     return null;
 };
-Kh.prototype.new_cached_block = function(Nh) {
+create_block_list.prototype.new_cached_block = function(Nh) {
     var Oh, Qh, i, j, Rh, Ph = this.cache;
     Oh = new Object();
     Oh.block_num = Nh;
@@ -547,14 +548,14 @@ Kh.prototype.new_cached_block = function(Nh) {
     Ph[j] = Oh;
     return Oh;
 };
-Kh.prototype.get_url = function(Dg, Nh) {
+create_block_list.prototype.get_url = function(this_url, number) {
     var p, s;
-    s = Nh.toString();
+    s = number.toString();
     while (s.length < 9) s = "0" + s;
-    p = Dg.indexOf("%d");
-    return Dg.substr(0, p) + s + Dg.substring(p + 2, Dg.length);
+    p = this_url.indexOf("%d");
+    return this_url.substr(0, p) + s + this_url.substring(p + 2, this_url.length);
 };
-Kh.prototype.read_async_cb = function(Sh) {
+create_block_list.prototype.read_async_cb = function(Sh) {
     var Nh, l, ue, Oh, i, Th, Uh, Vh, Wh;
     var Xh, Dg;
     while (this.sector_index < this.sector_count) {
@@ -585,17 +586,17 @@ Kh.prototype.read_async_cb = function(Sh) {
         this.sector_cb(0);
     }
 };
-Kh.prototype.add_block = function(Nh, Gg, ng) {
+create_block_list.prototype.add_block = function(num, data, data_len) {
     var Oh, Yh, i;
-    Oh = this.new_cached_block(Nh);
-    Yh = Oh.buf = Ig(this.block_sectors * 512);
-    if (typeof Gg == "string") {
-        for (i = 0; i < ng; i++) Yh[i] = Gg.charCodeAt(i) & 0xff;
+    Oh = this.new_cached_block(num);
+    Yh = Oh.buf = unix_array(this.block_sectors * 512);
+    if (typeof data == "string") {
+        for (i = 0; i < data_len; i++) Yh[i] = data.charCodeAt(i) & 0xff;
     } else {
-        for (i = 0; i < ng; i++) Yh[i] = Gg[i];
+        for (i = 0; i < data_len; i++) Yh[i] = data[i];
     }
 };
-Kh.prototype.read_async_cb2 = function(Gg, ng) {
+create_block_list.prototype.read_async_cb2 = function(Gg, ng) {
     var Nh;
     if (ng < 0 || ng != (this.block_sectors * 512)) {
         this.sector_cb( - 1);
@@ -605,7 +606,7 @@ Kh.prototype.read_async_cb2 = function(Gg, ng) {
         this.read_async_cb(false);
     }
 };
-Kh.prototype.read_async = function(yh, Yh, n, Zh) {
+create_block_list.prototype.read_async = function(yh, Yh, n, Zh) {
     if ((yh + n) > this.nb_sectors) return - 1;
     var hdd_debug = document.getElementById('hdd_debug');
     hdd_debug.innerHTML = 'r - reading ' + n + ' sectors after sector ' + yh;
@@ -621,31 +622,32 @@ Kh.prototype.read_async = function(yh, Yh, n, Zh) {
         return 1;
     }
 };
-Kh.prototype.preload = function(b_list, next_func) {
-    var i, Dg, Nh;
-    if (b_list.length == 0) {
+create_block_list.prototype.preload = function(block_list, next_func) {
+    var i, block_name, num;
+    if (block_list.length == 0) {
         setTimeout(next_func, 0);
     } else {
         this.preload_cb2 = next_func;
-        this.preload_count = b_list.length;
-        for (i = 0; i < b_list.length; i++) {
-            Nh = b_list[i];
-            Dg = this.get_url(this.url, Nh);
-            //load_binary(Dg, this.preload_cb.bind(this, Nh));
-            load_binary_remote(Dg, this.preload_cb.bind(this, Nh));
+        this.preload_count = block_list.length;
+        for (i = 0; i < block_list.length; i++) {
+            num = block_list[i];
+            block_name = this.get_url(this.url, num);
+            //load_binary(block_name, this.preload_cb.bind(this, num));
+            load_binary_remote(block_name, this.preload_cb.bind(this, num));
         }
     }
 };
-Kh.prototype.preload_cb = function(Nh, Gg, ng) {
-    if (ng < 0) {} else {
-        this.add_block(Nh, Gg, ng);
+create_block_list.prototype.preload_cb = function(num, data, data_len) {//hao
+    console.log("preload_cb:"+data_len);
+    if (data_len < 0) {} else {
+        this.add_block(num, data, data_len);
         this.preload_count--;
         if (this.preload_count == 0) {
             this.preload_cb2(0);
         }
     }
 };
-Kh.prototype.write_async = function(yh, Yh, n, Zh) { //hao
+create_block_list.prototype.write_async = function(yh, Yh, n, Zh) { //hao
     var hdd_debug = document.getElementById('hdd_debug');
     hdd_debug.innerHTML = 'w - writing ' + n + ' sectors after sector ' + ide_driver;
     // 
@@ -1017,10 +1019,10 @@ function ai(Kg, base, hh, ni, oi) {//hao network
     this.isr = 0;
     this.dcfg = 0;
     this.imr = 0;
-    this.phys = Ig(6);
+    this.phys = unix_array(6);
     this.curpag = 0;
-    this.mult = Ig(8);
-    this.mem = Ig((32 * 1024));
+    this.mult = unix_array(8);
+    this.mem = unix_array((32 * 1024));
     for (i = 0; i < 6; i++) this.mem[i] = ni[i];
     this.mem[14] = 0x57;
     this.mem[15] = 0x57;
@@ -1055,7 +1057,7 @@ function pi(Yh, Rb, ng) {//hao net0
 //add by hao net0 end
 
 function PCEmulator(params) {
-    var ti,si;//add by hao
+    var hard_disk,block_list;//add by hao
     var cpu;
     cpu = new CPU_X86();
     this.cpu = cpu;
@@ -1072,16 +1074,16 @@ function PCEmulator(params) {
     this.kbd    = new KBD(this, this.reset.bind(this));
     this.reset_request = 0;
 // add by hao for ide and net begin
-    ti = ["hda", "hdb"];
-    si = new Array();
-    for (i = 0; i < ti.length; i++) {
-        p = params[ti[i]];//hao
-        si[i] = null;
+    hard_disk = ["hda", "hdb"];
+    block_list = new Array();
+    for (i = 0; i < hard_disk.length; i++) {
+        p = params[hard_disk[i]];//hao
+        block_list[i] = null;
         if (p) {
-            si[i] = new Kh(p.url, p.block_size, p.nb_blocks);
+            block_list[i] = new create_block_list(p.url, p.block_size, p.nb_blocks);
         }
     }
-    this.ide0 = new ide_driver(this, 0x1f0, 0x3f6, this.pic.set_irq.bind(this.pic, 14), si); //hao
+    this.ide0 = new ide_driver(this, 0x1f0, 0x3f6, this.pic.set_irq.bind(this.pic, 14), block_list); //hao
     this.net0 = new ai(this, 0x300, this.pic.set_irq.bind(this.pic, 9), [0x62, 0xb9, 0xe8, 0x01, 0x02,
     /*0x03*/
     new Date().getTime() % 255], pi);//hao
